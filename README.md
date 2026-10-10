@@ -16,15 +16,9 @@
 
 ## 设计取向
 
-| 取向 | 说明 |
-|---|---|
-| **重点放在服装、姿势、构图** | 这是用户最常要改的部分，选词要准、要全；场景与光影只写需求里提到的。 |
-| **质量词、人物 tag 交给用户** | 质量串因模型而异；人物 tag 可以去 Danbooru 查或用 LoRA。用户给的原样保留。 |
-| **tag 来自词表，不靠模型凭记忆捏造** | 写 tag 前查词表，交付前逐个比对；词表可按模型更新。 |
-| **NL 只补 tag 说不清的部分** | tag 已经能描述的画面就不写 NL；要写也写得直白（「她左眼下有颗痣」「她坐在桌子上」），不堆形容词。 |
-| **图片反推由助手看图精选** | 打标器输出带置信度的长清单，助手对照原图挑出用户真正需要的那一组，用户只需审一份精炼清单。 |
-| **多角色单独一个模式** | 用户提供角色触发词与外观，助手用 NL 拼接位置、动作与互动。 |
-| **按模型切换写法** | `references/模型档案.md` 记录默认模型与各模型的 tag/NL 写法、token 上限，由助手维护。 |
+助手的注意力放在服装、姿势、构图上，这是用户最常要改的部分；质量词因模型而异，人物 tag 可以去 Danbooru 查或用 LoRA，这两类交给用户，用户给的原样保留。tag 来自可按模型更新的词表，写之前查词、交付前逐个比对，不靠模型凭记忆捏造。
+
+NL 只补 tag 说不清的部分（「她左眼下有颗痣」「她坐在桌子上」），而且写得直白，不堆形容词。图片反推时，助手对照原图从打标器的长清单里精选出真正需要的 tag，用户只需审一份精炼清单。多角色单独成一个模式，以 NL 为主：用户提供触发词与外观，助手拼接位置、动作与互动。各模型的写法与 token 上限记录在 `references/模型档案.md`，由助手维护。
 
 ## 模式
 
@@ -39,38 +33,13 @@
 
 **切换模型**：在请求里点名模型（「这张给 xx 用」）只对本次生效；说「我接下来都用 xx」「我用的是 xx 模型」才会改档案里的默认模型。
 
-## 示例
-
-<p align="center">
-  <img src="./assets/example-input.jpg" alt="示例输入：雨后天台上撑着透明伞的少女" width="420">
-</p>
-
-反推上图：
-
-```text
-1girl, solo,
-
-short hair, blue hair, blue eyes,
-
-raincoat, see-through clothes, hood, blue shirt, pleated skirt, blue skirt,
-hair flower, transparent umbrella, white footwear, sneakers,
-
-standing on one leg, holding umbrella, outstretched arm, light smile, looking at viewer,
-
-full body, from below, dutch angle,
-
-outdoors, rain, puddle, rainbow, backlighting,
-```
-
-外貌单独一行，换成自己的角色时整行删掉即可。
-
 ## 安装
 
 环境要求：Python 3.11 或更新版本。有 NVIDIA CUDA 时用 PixAI 原版 GPU 推理（PyTorch 2.8.0 cu128），否则用 PixAI ONNX CPU 推理（无需 PyTorch）。
 
 ```powershell
-git clone https://github.com/Vincent54122/anima-tagger.git anima-tagger
-cd anima-tagger
+git clone https://github.com/Tu-Doou/simple-tagger.git
+cd simple-tagger
 python tools/setup.py          # 建 .venv-pixai-gpu，装依赖，拉取打标模型
 python tools/setup.py --check  # 检查环境，退出码 0 即就绪
 ```
@@ -94,27 +63,11 @@ $PY = ".\.venv-pixai-gpu\Scripts\python.exe"   # Linux: ./.venv-pixai-gpu/bin/py
 
 ## 仓库结构
 
-```text
-anima-tagger/
-├── SKILL.md                 # Agent Skill 入口
-├── references/
-│   ├── 模型档案.md          # 默认模型与各模型写法（助手维护）
-│   ├── 格式规范.md          # 格式、NL 规则与禁则
-│   ├── 创作分支.md          # 中文需求 ➔ tag / NL
-│   ├── 反推分支.md          # 图片 ➔ 精选 tag
-│   ├── 多角色模式.md        # 以 NL 为主的多角色写法
-│   └── 词表维护.md          # 更新词表的流程与已知来源
-├── tools/
-│   ├── setup.py             # 环境配置与权重下载
-│   ├── pixai_tagger.py      # PixAI 打标（CUDA / ONNX CPU）
-│   ├── tag_vocab.py         # 词表安装、查词、校验
-│   └── anima_validate.py    # 交付前校验与 T5 token 计数
-├── vocab/                   # tag 词表与 manifest.json
-├── assets/
-└── models/
-    ├── t5_tokenizer/        # 内置 T5 分词器
-    └── pixai-tagger-*/      # 打标权重（setup 自动拉取，不入库）
-```
+- `SKILL.md`：Agent Skill 入口
+- `references/`：各模式指南、格式规范与模型档案
+- `tools/`：打标、词表、校验与环境配置脚本
+- `vocab/`：tag 词表及其来源记录
+- `models/`：T5 分词器；打标权重由 setup 下载，不入库
 
 ## 常见问题
 

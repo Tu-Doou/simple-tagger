@@ -16,15 +16,9 @@
 
 ## Design
 
-| Principle | Meaning |
-|---|---|
-| **Focus on clothing, pose, and composition** | These are what users edit most, so tag choice there must be precise and complete. Scene and lighting are written only when requested. |
-| **Quality and character tags are left to the user** | Quality strings differ per model; character tags come from Danbooru or a LoRA. Anything the user supplies is kept verbatim. |
-| **Tags come from a vocabulary, not from memory** | The assistant looks tags up before writing and the validator checks each one before delivery. The vocabulary can be updated per model. |
-| **NL only for what tags cannot say** | If tags already describe the image, no NL is written. When NL is needed it is plain ("She has a mole under her left eye."), without stacked adjectives. |
-| **Image tagging curated by the assistant** | The tagger emits a long scored list; the assistant checks it against the image and keeps what matters, so the user reviews a short list. |
-| **Separate multi-character mode** | The user provides trigger words and appearance per character; the assistant writes NL for positions, actions, and interaction. |
-| **Per-model writing style** | `references/模型档案.md` (model profiles) records the default model and each model's tag/NL style and token limit, maintained by the assistant. |
+The assistant focuses on clothing, pose, and composition, which are what users edit most. Quality tags vary by model and character tags come from Danbooru or a LoRA, so both are left to the user; anything the user supplies is kept verbatim. Tags come from a per-model vocabulary that can be updated: the assistant looks tags up before writing and checks each one before delivery instead of relying on memory.
+
+NL is written only for what tags cannot express ("She has a mole under her left eye.", "She sits on the desk."), in plain sentences without stacked adjectives. When tagging an image, the assistant checks the tagger's long scored list against the image and keeps only what matters, so the user reviews a short list. Multi-character prompts have their own NL-first mode: the user provides trigger words and appearance, and the assistant writes positions, actions, and interaction. Each model's style and token limit live in `references/模型档案.md` (model profiles), maintained by the assistant.
 
 ## Modes
 
@@ -39,38 +33,13 @@ Format rules: [格式规范](references/格式规范.md).
 
 **Switching models**: naming a model in a request applies only to that conversation; saying "from now on I use X" / "I'm using X" changes the default in the profile file.
 
-## Example
-
-<p align="center">
-  <img src="./assets/example-input.jpg" alt="Example input: a girl holding a transparent umbrella on a rooftop after rain" width="420">
-</p>
-
-Reverse-tagging the image above:
-
-```text
-1girl, solo,
-
-short hair, blue hair, blue eyes,
-
-raincoat, see-through clothes, hood, blue shirt, pleated skirt, blue skirt,
-hair flower, transparent umbrella, white footwear, sneakers,
-
-standing on one leg, holding umbrella, outstretched arm, light smile, looking at viewer,
-
-full body, from below, dutch angle,
-
-outdoors, rain, puddle, rainbow, backlighting,
-```
-
-Appearance tags sit on their own line so they can be dropped when swapping in your own character.
-
 ## Install
 
 Requires Python 3.11+. With NVIDIA CUDA, the original PixAI model runs on GPU (PyTorch 2.8.0 cu128); otherwise PixAI ONNX runs on CPU (no PyTorch needed).
 
 ```powershell
-git clone https://github.com/Vincent54122/anima-tagger.git anima-tagger
-cd anima-tagger
+git clone https://github.com/Tu-Doou/simple-tagger.git
+cd simple-tagger
 python tools/setup.py          # creates .venv-pixai-gpu, installs deps, downloads the tagger
 python tools/setup.py --check  # exit code 0 means ready
 ```
@@ -94,27 +63,11 @@ $PY = ".\.venv-pixai-gpu\Scripts\python.exe"   # Linux: ./.venv-pixai-gpu/bin/py
 
 ## Layout
 
-```text
-anima-tagger/
-├── SKILL.md                 # Agent Skill entry
-├── references/
-│   ├── 模型档案.md          # default model and per-model style (maintained by the assistant)
-│   ├── 格式规范.md          # format, NL rules, exclusions
-│   ├── 创作分支.md          # text request ➔ tags / NL
-│   ├── 反推分支.md          # image ➔ curated tags
-│   ├── 多角色模式.md        # NL-first multi-character prompts
-│   └── 词表维护.md          # vocabulary update flow and known sources
-├── tools/
-│   ├── setup.py             # environment setup and weight download
-│   ├── pixai_tagger.py      # PixAI tagger (CUDA / ONNX CPU)
-│   ├── tag_vocab.py         # vocabulary install, search, check
-│   └── anima_validate.py    # pre-delivery validator and T5 token count
-├── vocab/                   # tag vocabulary and manifest.json
-├── assets/
-└── models/
-    ├── t5_tokenizer/        # bundled T5 tokenizer
-    └── pixai-tagger-*/      # tagger weights (downloaded by setup, not tracked)
-```
+- `SKILL.md`: Agent Skill entry
+- `references/`: mode guides, format rules, and model profiles
+- `tools/`: tagging, vocabulary, validation, and setup scripts
+- `vocab/`: tag vocabulary and its source record
+- `models/`: T5 tokenizer; tagger weights are downloaded by setup and not tracked
 
 ## Troubleshooting
 
