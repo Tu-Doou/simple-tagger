@@ -1,6 +1,6 @@
 <h1 align="center">anima-tagger</h1>
 
-<p align="center">A specialized Agent Skill and toolchain for local dual-channel anime diffusion models such as Anima.<br>Transforms an image or a creative request into standardized "Danbooru tag stream + natural language" prompts.</p>
+<p align="center">An Agent Skill that helps write AI image prompts.<br>Chinese request ➔ Danbooru tags from a real vocabulary; image ➔ tagger output curated by the assistant; multi-character ➔ NL-first composition of actions and poses.</p>
 
 <p align="center">
   <a href="./README.en.md">English</a> | <a href="./README.md">简体中文</a>
@@ -9,206 +9,119 @@
 <p align="center">
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-MIT-22C55E?style=flat-square" alt="License: MIT"></a>
   <img src="https://img.shields.io/badge/Python-3.11%2B-3776AB?style=flat-square" alt="Python 3.11+">
-  <img src="https://img.shields.io/badge/Target-Anima-purple?style=flat-square" alt="Target: Anima">
+  <img src="https://img.shields.io/badge/Default-Anima-purple?style=flat-square" alt="Default: Anima">
 </p>
 
-Anima supports tags, natural-language captions, and hybrid prompts. This tool organizes tags and English descriptions consistently and uses the bundled T5 tokenizer to measure ordinary prompts against the default 512-token budget. Multi-character prompts group each subject's appearance, clothing, and actions, then use explicit subjects to describe placement and interaction.
+`anima-tagger` works as an **Agent Skill** (per the [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) specification), and its tools also run standalone from the command line. The skill instructions are written in Chinese.
 
-`anima-tagger` operates both as an **Agent Skill** (compliant with the [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) specification) and an independent CLI toolchain. It provides three prompt-generation paths:
-- **Reverse Branch (Image to Prompt)**: Extracts high-confidence Danbooru tags via original PixAI on CUDA, reviews general visual features while accepting all emitted character candidates, and deterministically normalizes the output.
-- **Creation Branch (Text to Prompt)**: Deconstructs abstract requirements into a production breakdown (Scriptwriter → Director → Key Animation → Cinematographer), assembling canonical tags and spatial/lighting NL sentences.
-- **Expansion Branch (Prompt to Detailed Long Draft)**: Rewrites an existing prompt or tag set into a three-part draft (Tag Anchors → Layered Detail → Refined Master) for long-prompt channels such as Krea2 that are not capped at 512 tokens, so **no length validation is performed**.
+## Design
 
-## Highlights
-
-| Feature | What it helps you do |
+| Principle | Meaning |
 |---|---|
-| **Image, idea, and prompt workflows** | Extract and organize features from a reference image, turn a written idea into a complete prompt, or enrich an existing prompt. The input determines the workflow. |
-| **Tags and natural language working together** | Danbooru tags specify characters, clothing, props, and poses. English prose adds depth, character interactions, and complex lighting, assembled into a consistent prompt structure ready to use. |
-| **Complete scenes from brief ideas** | Develop the subject, cast, action, setting, composition, and lighting step by step. Follow detailed requests faithfully, fill in missing scene elements for loose ideas, and offer distinct directions for open-ended requests. |
-| **Layered detail that preserves your anchors** | Keep the original key settings while expanding composition and pose, hair and accessories, expression, clothing, props, lighting and color, and background. Deliver a three-part draft—tag anchors, seven detail layers, and an integrated refinement—for long-prompt channels without a 512-token cap. |
-| **Descriptions grounded in visible content** | Translate abstract intent into concrete objects, positions, occlusion, materials, and lighting. Keep descriptions focused on the desired frame, avoiding off-frame shooting instructions, invisible psychological explanations, and generic quality boosters. |
-| **Cleanup and checks before delivery** | Deduplicate tags, fold broader terms, normalize formatting, and check known count and attribute conflicts, forbidden content, and prose format. Count ordinary prompts precisely with the T5 tokenizer against the default 512-token budget, trimming redundant prose first while protecting key settings. |
+| **Focus on clothing, pose, and composition** | These are what users edit most, so tag choice there must be precise and complete. Scene and lighting are written only when requested. |
+| **Quality and character tags are left to the user** | Quality strings differ per model; character tags come from Danbooru or a LoRA. Anything the user supplies is kept verbatim. |
+| **Tags come from a vocabulary, not from memory** | The assistant looks tags up before writing and the validator checks each one before delivery. The vocabulary can be updated per model. |
+| **NL only for what tags cannot say** | If tags already describe the image, no NL is written. When NL is needed it is plain ("She has a mole under her left eye."), without stacked adjectives. |
+| **Image tagging curated by the assistant** | The tagger emits a long scored list; the assistant checks it against the image and keeps what matters, so the user reviews a short list. |
+| **Separate multi-character mode** | The user provides trigger words and appearance per character; the assistant writes NL for positions, actions, and interaction. |
+| **Per-model writing style** | `references/模型档案.md` (model profiles) records the default model and each model's tag/NL style and token limit, maintained by the assistant. |
 
-## Multi-character prompts
+## Modes
 
-Arrange tag blocks as subject count, global framing/scene/weather/lighting, character A, character B, and further characters as needed, with blank lines between blocks. Each character block groups appearance, clothing, accessories, props, expressions, and poses. End with English sentences assigning placement and actions explicitly. Named characters also receive basic appearance descriptions.
+| Input | Mode | Guide |
+|---|---|---|
+| Text request, single subject | Creation | [创作分支](references/创作分支.md) |
+| Image | Reverse | [反推分支](references/反推分支.md) |
+| Several characters / trigger words and appearance | Multi-character | [多角色模式](references/多角色模式.md) |
+| "Update the vocabulary to model X" | Vocabulary | [词表维护](references/词表维护.md) |
 
-For image reversal, retain emitted character candidates and use the image to determine subject count, appearance, and placement. The validator checks formatting, conflicts, and budget; the assistant reviews subject ownership and counts the actual grouped final text.
+Format rules: [格式规范](references/格式规范.md).
 
-See the [multi-character guide](references/多人提示词.md) for detailed instructions, three examples, and panel guidance.
+**Switching models**: naming a model in a request applies only to that conversation; saying "from now on I use X" / "I'm using X" changes the default in the profile file.
 
-## Architecture
-
-```text
-┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐
-│     Input: Image    │  │    Input: Text      │  │   Input: Prompt     │
-└──────────┬──────────┘  └──────────┬──────────┘  └──────────┬──────────┘
-           │                        │                        │
-           ▼                        ▼                        ▼
-┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐
-│   Reverse Branch    │  │   Creation Branch   │  │  Expansion Branch   │
-│  pixai_tagger.py GPU │  │  LLM Breakdown      │  │  LLM Expansion      │
-│  30,877 Labels      │  │  Script → Lens      │  │  Tags → Layers → NL │
-└──────────┬──────────┘  └──────────┬──────────┘  └──────────┬──────────┘
-           │ Confidence Scores      │                        │
-           ▼                        │                        │
-┌─────────────────────┐             │                        │
-│  Agent Visual Check │             │                        │
-│   Characters accepted     │             │                        │
-│  General tags reviewed      │             │                        │
-└──────────┬──────────┘             │                        │
-           │                        │                        │
-           └───────────┬────────────┴────────────────────────┘
-                       ▼
-         ┌───────────────────────────┐
-         │     anima_validate.py     │
-         │ 1. Normalize & fold terms │
-         │ 2. Resolve slot conflicts │
-         │ 3. Measure T5 token cost  │
-         │ 4. Skip 512-token limit   │
-         └─────────────┬─────────────┘
-                       ▼
-         ┌───────────────────────────┐
-         │        Final Prompt       │
-         │  Danbooru Tags + Clean NL │
-         │  or 3-part Expansion Draft│
-         └───────────────────────────┘
-```
-
-## Input Example
+## Example
 
 <p align="center">
-  <img src="./assets/example-input.jpg" alt="Example input: a girl holding a clear umbrella after the rain" width="420">
+  <img src="./assets/example-input.jpg" alt="Example input: a girl holding a transparent umbrella on a rooftop after rain" width="420">
 </p>
 
-## Prompt Example
-
-Reversing the image above yields the same strict format every branch produces — **"tag sequence + spatial/lighting natural language"**:
+Reverse-tagging the image above:
 
 ```text
 1girl, solo,
 
-short hair, blue hair, blue eyes, parted bangs, bare legs,
+short hair, blue hair, blue eyes,
 
-transparent, translucent, see-through clothes, raincoat, coat, hood, long sleeves,
-see-through sleeves, blue shirt, pleated skirt, blue skirt, hair ornament, hair flower,
-white flower, transparent umbrella, white shoes, sneakers,
+raincoat, see-through clothes, hood, blue shirt, pleated skirt, blue skirt,
+hair flower, transparent umbrella, white footwear, sneakers,
 
-standing, standing on one leg, leg up, holding, holding umbrella, outstretched arm,
-looking at viewer, light smile, closed mouth,
+standing on one leg, holding umbrella, outstretched arm, light smile, looking at viewer,
 
 full body, from below, dutch angle,
 
-outdoors, day, building, cloudy sky, blue sky, cumulonimbus cloud, sunlight,
-backlighting, lens flare, rainbow, rain, water, puddle, reflection, water drop, bird,
-balloon, plant, overgrown,
-
-Place a girl balancing on one leg under a clear umbrella just after rain, one arm
-outstretched toward the rainbow arcing overhead and the other hand gripping the umbrella
-handle.
-Frame the full body from a low angle, overgrown buildings rising on both sides and small
-balloons drifting in the distant sky.
-Use strong sunlight bursting from the upper left behind the umbrella, water drops
-glittering in the backlight and the wet ground mirroring the sky.
+outdoors, rain, puddle, rainbow, backlighting,
 ```
 
-> Use concrete tags and English descriptions for composition, appearance, materials, actions, and lighting.
->
-> **WYSIWYG only**: Every word in the prompt is something the model will draw. The prompt's sole source of truth is the final frame — the user's wording, the shooting setup, and camera reasoning are scaffolding to internalize first, never to copy in; no off-frame apparatus, and no negative phrasing such as "no X in frame".
+Appearance tags sit on their own line so they can be dropped when swapping in your own character.
 
-## Quick Install
+## Install
 
-Requires Python 3.11 or newer. CUDA is preferred; systems without CUDA use the verified PixAI ONNX CPU route, including Intel/AMD GPU machines. GPU setup installs PyTorch 2.8.0 cu128; CPU setup does not require PyTorch.
+Requires Python 3.11+. With NVIDIA CUDA, the original PixAI model runs on GPU (PyTorch 2.8.0 cu128); otherwise PixAI ONNX runs on CPU (no PyTorch needed).
 
 ```powershell
 git clone https://github.com/Vincent54122/anima-tagger.git anima-tagger
 cd anima-tagger
-python tools/setup.py
+python tools/setup.py          # creates .venv-pixai-gpu, installs deps, downloads the tagger
+python tools/setup.py --check  # exit code 0 means ready
 ```
 
-`setup.py` initializes `.venv-pixai-gpu`, installs dependencies for the selected device, and downloads pinned assets. GPU deployment downloads only original weights; CPU deployment downloads only ONNX assets. When tagging falls back to CPU, missing ONNX assets are downloaded automatically and verified files are reused. Use `python tools/setup.py --device cpu` to force CPU deployment. Verify setup integrity anytime with:
-
-```powershell
-python tools/setup.py --check
-```
-
-## Quick Start
-
-### 1. As an Agent Skill (Recommended)
-
-Place the repository in your Agent's skills directory. When the agent loads `SKILL.md`, it automatically selects the optimal workflow:
-- Image provided ➔ executes the tagger and verifies features.
-- Text request provided ➔ crafts structured tags and scene directions.
-- Existing prompt to enrich ➔ runs the expansion workflow and returns a three-part long draft (no length check).
-
-### 2. Standalone CLI Usage
-
-Drive the local tagger and validator directly:
-
-```powershell
-$PY = ".\.venv-pixai-gpu\Scripts\python.exe"        # Linux (CUDA): ./.venv-pixai-gpu/bin/python
-
-# 1. Piped tagging & validation (Recommended: streaming pipe without temporary files)
-& $PY tools\pixai_tagger.py photo.png --general 0.17 --character 0.27 --json | & $PY tools\anima_validate.py --tagger-json -
-
-# 2. Or save intermediate artifacts to the managed .work/ temporary directory
-New-Item -ItemType Directory -Force -Path ".work" | Out-Null
-& $PY tools\pixai_tagger.py photo.png --general 0.17 --character 0.27 --json | Out-File .work\run.json -Encoding utf8
-& $PY tools\anima_validate.py --tagger-json .work\run.json
-
-# 3. Validate full output including natural language sentences
-& $PY tools\anima_validate.py --tags "1girl, solo, ..." --nl "Place the character..."
-```
+`--device cpu` forces CPU deployment. Set `$env:HF_ENDPOINT = "https://hf-mirror.com"` if Hugging Face is slow.
 
 ## Commands
 
-| Command | Description |
-|---|---|
-| `python tools/setup.py` | Sets up venv, installs requirements, downloads model weights |
-| `python tools/setup.py --check` | Validates environment and label table (exits 0 if ready) |
-| `tools/pixai_tagger.py <images...> --json` | Runs original PixAI CUDA tagger; emits per-tag confidence scores |
-| `tools/anima_validate.py --tagger-json <json>` | Cleans tags, folds hypernyms, checks conflicts, counts tokens |
-| `tools/anima_validate.py --tags "..." --nl "..."` | Known format/conflict checks and exact token budget; semantics and slot arrangement require assistant review |
-| `tools/anima_validate.py --tags "..." --no-token-limit` | Expansion Branch: still folds terms and checks slot conflicts, but skips the 512-token check |
+```powershell
+$PY = ".\.venv-pixai-gpu\Scripts\python.exe"   # Linux: ./.venv-pixai-gpu/bin/python
+```
 
-## Repository Layout
+| Command | Purpose |
+|---|---|
+| `& $PY tools\tag_vocab.py info` | Source, data date, and model of the active vocabulary |
+| `& $PY tools\tag_vocab.py search pleated skirt` | Look up tags, sorted by post count |
+| `& $PY tools\tag_vocab.py check "1girl, ..."` | Check that every tag is in the vocabulary |
+| `& $PY tools\tag_vocab.py install <url> --model <name> --source-date <date>` | Install or update the vocabulary |
+| `& $PY tools\pixai_tagger.py <images...> --json` | Tag images with per-tag confidence |
+| `& $PY tools\anima_validate.py --tags "..." --nl "..." --token-limit 512 --user-tags "..."` | Pre-delivery check: normalize, fold, conflicts, vocabulary, quality tags, token count |
+
+## Layout
 
 ```text
 anima-tagger/
-├── SKILL.md                     # Skill entry point (Agent Skills standard)
-├── references/                  # Core prompt guidelines and workflows
-│   ├── 格式规范.md              # Format rules, slot orders, and banned tags
-│   ├── 反推分支.md              # Image-to-prompt reverse pipeline
-│   ├── 创作分支.md              # Text-to-prompt creative breakdown
-│   ├── 多人提示词.md            # Grouped tags, subject ownership, and examples
-│   └── 扩写分支.md              # Prompt-to-draft expansion (no 512-token cap)
-├── tools/                       # Python toolchain
-│   ├── setup.py                 # Idempotent setup and weight downloader
-│   ├── pixai_tagger.py             # PyTorch CUDA tagging engine
-│   ├── anima_validate.py        # Deterministic validator & tokenizer
-│   └── requirements.txt
-├── assets/                      # README example images
+├── SKILL.md                 # Agent Skill entry
+├── references/
+│   ├── 模型档案.md          # default model and per-model style (maintained by the assistant)
+│   ├── 格式规范.md          # format, NL rules, exclusions
+│   ├── 创作分支.md          # text request ➔ tags / NL
+│   ├── 反推分支.md          # image ➔ curated tags
+│   ├── 多角色模式.md        # NL-first multi-character prompts
+│   └── 词表维护.md          # vocabulary update flow and known sources
+├── tools/
+│   ├── setup.py             # environment setup and weight download
+│   ├── pixai_tagger.py      # PixAI tagger (CUDA / ONNX CPU)
+│   ├── tag_vocab.py         # vocabulary install, search, check
+│   └── anima_validate.py    # pre-delivery validator and T5 token count
+├── vocab/                   # tag vocabulary and manifest.json
+├── assets/
 └── models/
-    ├── t5_tokenizer/            # Bundled T5 tokenizer assets
-    └── pixai-tagger-v1.0-original/            # Downloaded model weights (via setup.py)
+    ├── t5_tokenizer/        # bundled T5 tokenizer
+    └── pixai-tagger-*/      # tagger weights (downloaded by setup, not tracked)
 ```
 
 ## Troubleshooting
 
-- **Slow / Interrupted Downloads**: Use a mirror endpoint before running setup:
-  ```powershell
-  $env:HF_ENDPOINT = "https://hf-mirror.com"
-  python tools/setup.py
-  ```
-- **Token `+unk` Warning**: Indicates characters outside the T5 vocabulary (e.g., non-Latin or unsupported symbols). Ensure prompts are composed in clean English.
-- **Token Budget Exceeded**: When token count exceeds `512`, shorten NL first. If tags alone exceed the budget or the prompt still does not fit, reduce redundant and secondary tags while protecting explicit user anchors. (The Expansion Branch is exempt: add `--no-token-limit` and shorten nothing.)
+- **`+unk` warning**: the prompt contains characters the T5 vocabulary cannot represent (e.g. Chinese). Use English.
+- **Over the token limit**: drop optional NL sentences first, then minor scene tags, keeping what the user explicitly asked for. The limit comes from the model profile.
+- **"Tag not in vocabulary"**: use the validator's suggested near match or move the idea into NL; put user-supplied trigger words in `--user-tags`.
 
 ## License
 
-Released under the [MIT License](./LICENSE).
-For third-party model assets and license details, see [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).
-
-Rating scores stay in analysis metadata. The validator checks formatting, conflicts, and budget; the assistant reviews semantics and slot arrangement. Restore the exact tokenizer before validating the ordinary prompt budget.
-
-Default `--device auto` uses original CUDA BF16 inference (optional FP32) or falls back to ONNX CPU FP32 when CUDA is absent. Use `--device cpu` to force CPU. Retain emitted character candidates. Process multiple images together to share model loading. JSON `performance` separates model loading from per-image timing and reports PyTorch memory allocations.
+[MIT License](./LICENSE). Third-party assets: [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md).

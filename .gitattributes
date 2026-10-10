@@ -21,3 +21,6 @@ models/qwen_tokenizer/tokenizer.json -text
 *.jpg         binary
 *.jpeg        binary
 *.webp        binary
+
+# 词表：SHA256 记录在 vocab/manifest.json，禁止行尾转换
+vocab/*.csv -text

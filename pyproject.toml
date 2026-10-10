@@ -50,6 +50,7 @@ dev = [
 [project.scripts]
 anima-tagger = "tools.pixai_tagger:main"
 anima-validate = "tools.anima_validate:main"
+anima-vocab = "tools.tag_vocab:main"
 anima-setup = "tools.setup:main"
 
 [project.urls]

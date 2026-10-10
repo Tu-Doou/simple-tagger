@@ -48,9 +48,18 @@ SHA256 `d60acb128cf7b7f2536e8f38a5b18a05535c9e14c7a355904270e15b0945ea86`）。
 
 ## 3. 标签词表
 
-标签名位于 PixAI `config.json`，派生自 Danbooru 标签体系。项目不主张标签名本身的权利，不分发 Danbooru 图库或数据集。
+打标器的标签名位于 PixAI `config.json`，派生自 Danbooru 标签体系。项目不主张标签名本身的权利，不分发 Danbooru 图库或数据集。
 
-用户自行下载的其他模型或资产应遵守各自的上游许可证。
+`vocab/` 下的查词词表由 `tools/tag_vocab.py install` 下载，来源、数据日期与 SHA256 记录在 `vocab/manifest.json`。默认词表：
+
+| 项 | 值 |
+|---|---|
+| 文件 | `vocab/danbooru.csv`（标签名、类别、帖子数、别名） |
+| 上游 | [DominikDoom/a1111-sd-webui-tagcomplete](https://github.com/DominikDoom/a1111-sd-webui-tagcomplete) `tags/danbooru.csv` |
+| 数据日期 | 2025-01-03 |
+| 许可 | 上游仓库为 MIT；标签数据整理自 Danbooru 公开标签列表 |
+
+用户自行下载的其他模型、词表或资产应遵守各自的上游许可证。
 
 ## 4. PixAI ONNX CPU 回退资产
 
