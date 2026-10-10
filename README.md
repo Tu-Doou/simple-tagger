@@ -1,4 +1,4 @@
-<h1 align="center">anima-tagger</h1>
+<h1 align="center">sample-tagger</h1>
 
 <p align="center">辅助书写 AI 绘画提示词的 Agent Skill。<br>中文需求 ➔ 词表内的 Danbooru tag；图片 ➔ 打标后由助手看图精选 tag；多角色 ➔ 以 NL 为主拼接动作与姿势。</p>
 
@@ -12,13 +12,15 @@
   <img src="https://img.shields.io/badge/Default-Anima-purple?style=flat-square" alt="Default: Anima">
 </p>
 
-`anima-tagger` 既可作为 **Agent Skill**（遵循 [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) 标准）挂载给 AI 助手，也能在命令行单独使用其中的工具。
+`sample-tagger` 既可作为 **Agent Skill**（遵循 [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) 标准）挂载给 AI Agent，也能在命令行单独使用其中的工具。
 
-## 设计取向
+## 前言
 
-助手的注意力放在服装、姿势、构图上，这是用户最常要改的部分；质量词因模型而异，人物 tag 可以去 Danbooru 查或用 LoRA，这两类交给用户，用户给的原样保留。tag 来自可按模型更新的词表，写之前查词、交付前逐个比对，不靠模型凭记忆捏造。
+质量词、人物这些往往都不需要主动模型主动构建 tag。质量词不同的模型有不同的质量词适配，往往很难确定一个统一质量串；人物 tag 网站、人物LoRA的存在已经相当便利，也可以避免agent对于不熟悉角色的进行臆想；为确保 tag 来源，直接让agent去读取词表进行校验是最好的。传统的WD提取 tag 内容还需要人工判断，如果利用具有视觉能力的大模型进行辅助判断，精选出用户想要找的 tag，减少用户负担（判断精炼的 tag 比WD生成的 tag 更省力）。
 
-NL 只补 tag 说不清的部分（「她左眼下有颗痣」「她坐在桌子上」），而且写得直白，不堆形容词。图片反推时，助手对照原图从打标器的长清单里精选出真正需要的 tag，用户只需审一份精炼清单。多角色单独成一个模式，以 NL 为主：用户提供触发词与外观，助手拼接位置、动作与互动。各模型的写法与 token 上限记录在 `references/模型档案.md`，由助手维护。
+NL的词藻问题，在实际使用源项目的过程中，往往能够发现agent吐出的描述NL过于文雅，甚至堆砌了不少的形容词：“暖洋洋的太阳照在一片宽阔无比的草地上...”，适当的形容词确实可以增加一些画面权重，但不如直当的描述来的实在。~~有点提示词洁癖~~。
+
+各模型的写法与 token 上限记录在 `references/模型档案.md`，由agent维护。
 
 ## 模式
 
@@ -37,6 +39,7 @@ NL 只补 tag 说不清的部分（「她左眼下有颗痣」「她坐在桌子
 
 环境要求：Python 3.11 或更新版本。有 NVIDIA CUDA 时用 PixAI 原版 GPU 推理（PyTorch 2.8.0 cu128），否则用 PixAI ONNX CPU 推理（无需 PyTorch）。
 
+在目标agent的skills文件夹内：
 ```powershell
 git clone https://github.com/Tu-Doou/simple-tagger.git
 cd simple-tagger

@@ -54,8 +54,8 @@ anima-vocab = "tools.tag_vocab:main"
 anima-setup = "tools.setup:main"
 
 [project.urls]
-Homepage = "https://github.com/your-username/anima-tagger"
-Repository = "https://github.com/your-username/anima-tagger.git"
+Homepage = "https://github.com/Tu-Doou/simple-tagger"
+Repository = "https://github.com/Tu-Doou/simple-tagger.git"
 
 [tool.setuptools.packages.find]
 where = ["."]
