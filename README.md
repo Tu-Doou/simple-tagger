@@ -3,7 +3,7 @@
 <p align="center">辅助书写 AI 绘画提示词的 Agent Skill。<br>中文需求 ➔ 词表内的 Danbooru tag；图片 ➔ 打标后由助手看图精选 tag；多角色 ➔ 以 NL 为主拼接动作与姿势。</p>
 
 <p align="center">
-  <a href="./README.en.md">English</a> | <a href="./README.md">简体中文</a>
+  <a href="./README.md">简体中文</a>
 </p>
 
 <p align="center">

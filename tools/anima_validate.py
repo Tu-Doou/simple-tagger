@@ -115,12 +115,12 @@ def check_format(tags: list[str], nl: str = "", user_tags: set[str] = frozenset(
     return issues
 
 
-def check_tokens(count: int, method: str, tag_count: int, limit: int) -> list[str]:
+def check_tokens(count: int, method: str, tag_count: int, limit: int, user_has_backslash=False) -> list[str]:
     issues = []
     enforce = limit > 0
     if enforce and method.startswith("estimate"):
         issues.append("分词器不可用：当前只有粗略估算，不能确认预算合格；请运行 tools/setup.py 检查环境")
-    if "+unk" in method:
+    if "+unk" in method and not user_has_backslash:
         issues.append("文本含当前 T5 词表无法表示的字符；请检查字符并使用规范英文")
     if enforce and count > limit:
         hint = ("标签层本身超限：保护用户明确锚点，优先删冗余、次要及低置信度标签"
@@ -544,7 +544,8 @@ def main() -> int:
     n_tok, how = count_tokens(text)
     tag_tok, _ = count_tokens(tag_text)
     problems.extend(check_format(folded, args.nl, user_tags))
-    problems.extend(check_tokens(n_tok, how, tag_tok, args.token_limit))
+    problems.extend(check_tokens(n_tok, how, tag_tok, args.token_limit,
+                             user_has_backslash=any("\\" in t for t in user_spelling.values())))
     if conflicts:
         problems.append(f"{len(conflicts)} 个槽位有多值，需人工/看图定夺")
 

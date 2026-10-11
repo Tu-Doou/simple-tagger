@@ -1,9 +1,9 @@
 ---
-name: anima-tagger
+name: simple-tagger
 description: 辅助书写 AI 绘画提示词。中文需求 ➔ 词表内的 Danbooru tag（必要时补几句直白 NL）；图片 ➔ 打标后由助手看图按置信度精选 tag；多角色画面走以 NL 为主的多角色模式。NL 风格与 token 预算按模型档案切换，tag 词表可按模型更新。当用户要写/改提示词、发图要反推 tag、要拼多角色提示词、说「更新词表到 xx 模型」或「我用的是 xx 模型」时使用。
 ---
 
-# anima-tagger
+# simple-tagger
 
 ## 先定模型
 
