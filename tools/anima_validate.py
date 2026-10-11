@@ -87,11 +87,11 @@ FORBIDDEN_TAGS = {"masterpiece", "best quality", "worst quality", "low quality",
                   "ultra detailed", "break", "negative", "negative prompt"}
 
 
-def clean_tags(raw: list[str]) -> tuple[list[str], list[str]]:
-    """分级只属于打标元数据；成品中移除，其他标签保持顺序。"""
+def clean_tags(raw: list[str], keep: set[str] = frozenset()) -> tuple[list[str], list[str]]:
+    """分级只属于打标元数据；成品中移除（用户自己给的除外），其他标签保持顺序。"""
     normalized = [normalize_tag(t) for t in raw if normalize_tag(t)]
-    removed = [t for t in normalized if t in RATING_TAGS]
-    return [t for t in normalized if t not in RATING_TAGS], removed
+    removed = [t for t in normalized if t in RATING_TAGS and t not in keep]
+    return [t for t in normalized if t not in RATING_TAGS or t in keep], removed
 
 
 def check_format(tags: list[str], nl: str = "", user_tags: set[str] = frozenset()) -> list[str]:
@@ -477,13 +477,13 @@ def main() -> int:
     problems: list[str] = []
 
     # 1) 规范化（分数跟着规范化后的名字走，折叠时按分数挑保留项）
-    norm, removed_ratings = clean_tags(raw)
+    user_spelling = {normalize_tag(t): t.strip() for t in args.user_tags.split(",") if t.strip()}
+    user_tags = set(user_spelling)
+    norm, removed_ratings = clean_tags(raw, user_tags)
     score_by_norm: dict[str, float] = {}
     for src, dst in zip(raw, [normalize_tag(t) for t in raw]):
         if dst:
             score_by_norm[dst] = max(score_by_norm.get(dst, 0.0), raw_scores.get(src, 0.0))
-    user_spelling = {normalize_tag(t): t.strip() for t in args.user_tags.split(",") if t.strip()}
-    user_tags = set(user_spelling)
     changed = [(a, normalize_tag(a)) for a in raw
                if a.strip() != normalize_tag(a) and normalize_tag(a) not in user_tags]
 
