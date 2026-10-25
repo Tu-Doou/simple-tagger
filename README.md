@@ -1,4 +1,4 @@
-<h1 align="center">sample-tagger</h1>
+<h1 align="center">simple-tagger</h1>
 
 <p align="center">辅助书写 AI 绘画提示词的 Agent Skill。<br>中文需求 ➔ 词表内的 Danbooru tag；图片 ➔ 打标后由助手看图精选 tag；多角色 ➔ 以 NL 为主拼接动作与姿势。</p>
 
@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Default-Anima-purple?style=flat-square" alt="Default: Anima">
 </p>
 
-`sample-tagger` 既可作为 **Agent Skill**（遵循 [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) 标准）挂载给 AI Agent，也能在命令行单独使用其中的工具。
+`simple-tagger` 既可作为 **Agent Skill**（遵循 [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills) 标准）挂载给 AI Agent，也能在命令行单独使用其中的工具。
 
 ## 前言
 
@@ -31,9 +31,9 @@ NL的词藻问题，在实际使用源项目的过程中，往往能够发现age
 | 多个角色 / 角色触发词与外观 | 多角色 | [多角色模式](references/多角色模式.md) |
 | 「更新词表到 xx 模型」 | 词表维护 | [词表维护](references/词表维护.md) |
 
-格式与禁则见 [格式规范](references/格式规范.md)。
+格式与禁则见 [SKILL.md](SKILL.md)「通用规则」。
 
-**切换模型**：在请求里点名模型（「这张给 xx 用」）只对本次生效；说「我接下来都用 xx」「我用的是 xx 模型」才会改档案里的默认模型。
+**切换模型**：在请求里点名模型（「这张给 xx 用」）只对本次生效；说「我接下来都用 xx」「我用的是 xx 模型」才会改 SKILL.md 里的默认模型。
 
 ## 安装
 
@@ -66,8 +66,8 @@ $PY = ".\.venv-pixai-gpu\Scripts\python.exe"   # Linux: ./.venv-pixai-gpu/bin/py
 
 ## 仓库结构
 
-- `SKILL.md`：Agent Skill 入口
-- `references/`：各模式指南、格式规范与模型档案
+- `SKILL.md`：Agent Skill 入口，含通用规则与全部工具命令
+- `references/`：各模式指南、词表维护与模型档案
 - `tools/`：打标、词表、校验与环境配置脚本
 - `vocab/`：tag 词表及其来源记录
 - `models/`：T5 分词器；打标权重由 setup 下载，不入库
