@@ -29,6 +29,11 @@ def parse_box(text: str) -> tuple[float, float, float, float]:
 
 
 def main() -> int:
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except AttributeError:
+            pass
     ap = argparse.ArgumentParser(description="裁切图片局部并放大")
     ap.add_argument("image", type=Path)
     ap.add_argument("--box", type=parse_box, required=True, help="左,上,右,下（0~1 比例）")

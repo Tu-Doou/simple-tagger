@@ -61,6 +61,7 @@ $PY = ".\.venv-pixai-gpu\Scripts\python.exe"   # Linux: ./.venv-pixai-gpu/bin/py
 | `& $PY tools\tag_vocab.py search pleated skirt` | 查词，按帖子数排序 |
 | `& $PY tools\tag_vocab.py check "1girl, ..."` | 校验一串 tag 是否都在词表内 |
 | `& $PY tools\tag_vocab.py install <url> --model <名> --source-date <日期>` | 安装/更新词表 |
+| `& $PY tools\opencode_image.py --out .work` | 取出粘贴进 opencode 对话的图片（它们只存在 opencode 数据库里） |
 | `& $PY tools\pixai_tagger.py <图片...> --json` | 打标，输出每个 tag 的置信度 |
 | `& $PY tools\crop.py <图片> --box 0.3,0.5,0.7,1.0 --out .work\crop.png` | 裁切局部并放大，供看图核对细节 |
 | `& $PY tools\anima_validate.py --tags "..." --nl "..." --token-limit 512 --user-tags "..."` | 交付前校验：规范化、折叠、冲突、词表、质量词、token 计数 |
