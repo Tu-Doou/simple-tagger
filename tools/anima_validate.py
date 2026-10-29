@@ -277,11 +277,12 @@ CHARACTER_SLOTS: dict[str, set[str]] = {
 
 # 画面级槽位：任何情况都要查（它们描述的是"这张图怎么拍的"，与人数无关）
 IMAGE_SLOTS: dict[str, set[str]] = {
-    "background_form": {"simple background", "blurry background", "white background",
-                        "detailed background", "transparent background", "dark background"},
+    # 颜色（white / dark）归 background_color：Danbooru 中 white background 隐含 simple background，两者常并存
+    "background_form": {"simple background", "blurry background", "detailed background",
+                        "transparent background"},
     "background_type": {"gradient background", "checkered background", "two-tone background",
                         "spotlight", "vignette"},
-    "background_color": _suffix_slot(_C, "background"),
+    "background_color": _suffix_slot(_C, "background") | {"dark background"},
     "gaze": {"looking at viewer", "looking away", "looking down", "looking up",
              "looking back", "looking to the side", "looking at another"},
     "framing": {"full body", "upper body", "cowboy shot", "close-up", "portrait",
@@ -298,6 +299,7 @@ SLOT_SUPPRESSORS: dict[str, set[str]] = {
     "legwear": {"asymmetrical legwear", "uneven legwear", "mismatched legwear",
                 "single thighhigh", "single sock", "single legwear", "asymmetrical legwear"},
     "background_form": {"gradient background", "two-tone background"},
+    "background_color": {"gradient background", "two-tone background"},
     "pose": {"sitting", "squatting"},   # 坐姿与蹲姿可并存，不互斥
 }
 

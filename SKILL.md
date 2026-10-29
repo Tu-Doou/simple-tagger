@@ -116,7 +116,7 @@ $PY    = "$SKILL\.venv-pixai-gpu\Scripts\python.exe"   # Linux: $SKILL/.venv-pix
 | 单个概念查词 | `& $PY "$SKILL\tools\tag_vocab.py" search pleated skirt [--limit 40]` | 名字或别名含全部关键词的词条，按帖子数排序；默认只查 general 类、帖子数 ≥ 50 |
 | 词表元信息 | `& $PY "$SKILL\tools\tag_vocab.py" info` | |
 | 安装/更新词表 | `& $PY "$SKILL\tools\tag_vocab.py" install "<url>" --model "<模型>" --source-date "<日期>" --note "<来源说明>"` | **先经用户确认来源与日期再执行**：会下载大文件并替换当前生效的词表 |
-| 取出粘贴的图片 | `& $PY "$SKILL\tools\opencode_image.py" --out "$SKILL\.work"` | 在项目目录内运行；只读 opencode 数据库，取当前项目最近一条带图消息里的全部图片，打印保存路径。`--list` 只列出，`--nth 2` 取往前第 2 条 |
+| 取出粘贴的图片 | `& $PY "$SKILL\tools\opencode_image.py" --out "$SKILL\.work"` | 仅用于剪贴板粘贴、没有本地路径的图片。在项目目录内运行；只读 opencode 数据库，取当前项目最近一条带图消息里的全部图片，打印保存路径。`--list` 只列出，`--nth 2` 取往前第 2 条 |
 | 图片打标 | `& $PY "$SKILL\tools\pixai_tagger.py" "<图片...>" --json \| Out-File "$SKILL\.work\run.json" -Encoding utf8` | 输出很长，写进文件再按需读取，不要直接打印；多图一次传入（默认阈值 general 0.17、character 0.27） |
 | 裁切放大 | `& $PY "$SKILL\tools\crop.py" "<图片>" --box 左,上,右,下 --out "$SKILL\.work\crop.png"` | `--box` 用 0~1 比例坐标；输出长边放大到 1024 后再看 |
 | 交付前校验 | `& $PY "$SKILL\tools\anima_validate.py" --tags "<tag 串>" --nl "<NL，没有就省略>" --token-limit <token-limit> --user-tags "<用户给的全部内容>"` | 必须执行。负责规范化、去重、上位词折叠、槽位冲突、词表比对（词表外/别名/人物/作品/画师/元数据类）、质量词、NL 句号、T5 计数 |
