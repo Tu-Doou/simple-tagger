@@ -366,6 +366,24 @@ def find_conflicts(tags: list[str], is_multi: bool = False) -> list[dict]:
         })
     return out
 
+# ---------------------------------------------------------------- 拆复合 tag（--fix 用）
+
+def split_compound(vocab, tag: str) -> list[str] | None:
+    """把词表外的「修饰词 × N + 中心名词」拆成每个修饰词各配中心名词。
+
+    white pleated skirt → white skirt, pleated skirt。任何一段不在词表的 general 类里就不拆。
+    """
+    words = tag.split()
+    if len(words) < 3:
+        return None
+    parts = []
+    for w in words[:-1]:
+        r = vocab.lookup(f"{w} {words[-1]}")
+        if r["status"] == "unknown" or r.get("category") != "general":
+            return None
+        parts.append(r.get("canonical", r["tag"]))
+    return parts
+
 # ---------------------------------------------------------------- 读文件
 
 def read_text_sniff(path: Path | str) -> str:
@@ -475,12 +493,13 @@ def main() -> int:
     if args.tagger_json:
         raw, raw_scores = load_tagger_json(args.tagger_json)
     else:
-        raw = [t for t in (x.strip() for x in args.tags.split(",")) if t]
+        raw = [t for t in (x.strip() for x in re.split(r"[,\n]", args.tags)) if t]
         raw_scores = {}
-    # 空行分隔的分组：记下每个 tag 属于第几组，成品按原分组输出
+    # 空行分隔的分组：记下每个 tag 属于第几组，成品按原分组输出。
+    # 换行也算分隔符：行末漏写逗号时，跨行的两个 tag 不会被连成一个词表外 tag
     group_of: dict[str, int] = {}
     for gi, block in enumerate(re.split(r"\n\s*\n", args.tags or "")):
-        for t in block.split(","):
+        for t in re.split(r"[,\n]", block):
             group_of.setdefault(normalize_tag(t), gi)
 
     problems: list[str] = []
@@ -538,17 +557,22 @@ def main() -> int:
             vocab_info = {"vocab": why,
                           "flagged": [r for r in results if r["status"] != "ok" or r["user_decides"]]}
             if args.fix:
-                replace: dict[str, str | None] = {}
+                replace: dict[str, list[str]] = {}
                 for r in results:
-                    if r["status"] == "unknown" or r["user_decides"]:
-                        replace[r["tag"]] = None
+                    parts = split_compound(vocab, r["tag"]) if r["status"] == "unknown" else None
+                    if parts:
+                        replace[r["tag"]] = parts
+                        fixed.append(f"{r['tag']} → {', '.join(parts)}（拆开）")
+                    elif r["status"] == "unknown" or r["user_decides"]:
+                        replace[r["tag"]] = []
                         near = f"（近似：{', '.join(r['suggestions'])}）" if r.get("suggestions") else ""
                         fixed.append(f"删 {r['tag']}：{'词表外' if r['status'] == 'unknown' else r['category'] + ' 类'}{near}")
                     elif r["status"] == "alias":
-                        replace[r["tag"]] = r["canonical"]
-                        group_of.setdefault(r["canonical"], group_of.get(r["tag"], 0))
+                        replace[r["tag"]] = [r["canonical"]]
                         fixed.append(f"{r['tag']} → {r['canonical']}")
-                folded = list(dict.fromkeys(replace.get(t, t) for t in folded if replace.get(t, t)))
+                    for p in replace.get(r["tag"], []):
+                        group_of.setdefault(p, group_of.get(r["tag"], 0))
+                folded = list(dict.fromkeys(p for t in folded for p in replace.get(t, [t])))
             else:
                 problems.extend(problems_from_check(results))
 
