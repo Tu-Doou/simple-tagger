@@ -18,7 +18,8 @@ description: >
 
    | 用户给了什么 | 模式 | 读 |
    |---|---|---|
-   | 画面需求，单个主体 | 创作 | `references/创作.md`、`references/通用规则.md`、`references/工具.md` |
+   | 画面需求，单个主体 | 快速创作 | `references/创作-快速.md` |
+   | 画面需求，单个主体，且用户说「仔细 / 精确」或要多个方案 | 仔细创作 | `references/创作-仔细.md`、`references/通用规则.md`、`references/工具.md` |
    | 图片（附件、本地路径、「照着这张反推」） | 快速反推 | `references/反推-快速.md`，并在同一条回复里跑 `quick_tag.py`（命令见下方「环境」，不必等读完指南） |
    | 图片，且用户说「仔细 / 精确 / 详细反推」 | 仔细反推 | `references/反推-仔细.md`、`references/通用规则.md`、`references/工具.md` |
    | 两个及以上角色同框，或多个角色的触发词/外观 | 多角色 | `references/多角色.md`、`references/通用规则.md`、`references/工具.md` |

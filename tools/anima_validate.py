@@ -634,9 +634,9 @@ def main() -> int:
             for d, k in drops:
                 print(f"  - {d}  （被 {k} 覆盖）")
         if blocked_folds:
-            print("\n[闸拦下：动作词超串，不折]")
+            print("\n[未折叠 · 仅供参考，无需处理]")
             for v, k in blocked_folds:
-                print(f"  - {v}  虽然 {k} 词集覆盖它，但多出来的是动作词")
+                print(f"  - {v}  与 {k} 词集重叠，但中心名词不同或是动作短语")
         if conflicts:
             print("\n[槽位冲突 · 需人工定夺]")
             for c in conflicts:
