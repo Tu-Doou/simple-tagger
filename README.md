@@ -26,12 +26,12 @@ NL的词藻问题，在实际使用源项目的过程中，往往能够发现age
 
 | 输入 | 模式 | 指南 |
 |---|---|---|
-| 中文画面需求（单主体） | 创作 | [创作分支](references/创作分支.md) |
-| 图片 | 反推 | [反推分支](references/反推分支.md) |
-| 多个角色 / 角色触发词与外观 | 多角色 | [多角色模式](references/多角色模式.md) |
+| 中文画面需求（单主体） | 创作 | [创作](references/创作.md) |
+| 图片 | 仔细反推 | [仔细反推](references/反推-仔细.md) |
+| 多个角色 / 角色触发词与外观 | 多角色 | [多角色](references/多角色.md) |
 | 「更新词表到 xx 模型」 | 词表维护 | [词表维护](references/词表维护.md) |
 
-格式与禁则见 [SKILL.md](SKILL.md)「通用规则」。
+格式与禁则见 [通用规则](references/通用规则.md)，命令见 [工具](references/工具.md)。
 
 **切换模型**：在请求里点名模型（「这张给 xx 用」）只对本次生效；说「我接下来都用 xx」「我用的是 xx 模型」才会改 SKILL.md 里的默认模型。
 
@@ -68,7 +68,7 @@ $PY = ".\.venv-pixai-gpu\Scripts\python.exe"   # Linux: ./.venv-pixai-gpu/bin/py
 
 ## 仓库结构
 
-- `SKILL.md`：Agent Skill 入口，含通用规则与全部工具命令
+- `SKILL.md`：Agent Skill 入口，按模式路由到 `references/` 下的指南
 - `references/`：各模式指南、词表维护与模型档案
 - `tools/`：打标、词表、校验与环境配置脚本
 - `vocab/`：tag 词表及其来源记录
