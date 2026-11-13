@@ -463,6 +463,8 @@ def main() -> int:
                     help="输入是 pixai_tagger 的多图 JSON 时，逐张图分别校验（E2E 用）")
     ap.add_argument("--proposed", type=Path,
                     help="审计一个 LLM 给出的 tag 列表（逗号分隔或每行一个）：查发明 / 查过度删除")
+    ap.add_argument("--fix", action="store_true",
+                    help="自动修正词表问题：别名换规范名，词表外与人物/作品/画师/元数据类直接删除并列出（快速模式用）")
     ap.add_argument("--json", action="store_true", help="以 JSON 输出")
     args = ap.parse_args()
     if args.nl_file:
@@ -475,6 +477,11 @@ def main() -> int:
     else:
         raw = [t for t in (x.strip() for x in args.tags.split(",")) if t]
         raw_scores = {}
+    # 空行分隔的分组：记下每个 tag 属于第几组，成品按原分组输出
+    group_of: dict[str, int] = {}
+    for gi, block in enumerate(re.split(r"\n\s*\n", args.tags or "")):
+        for t in block.split(","):
+            group_of.setdefault(normalize_tag(t), gi)
 
     problems: list[str] = []
 
@@ -521,6 +528,7 @@ def main() -> int:
 
     # 3c) 词表：助手写的 tag 必须在词表内；人物/作品/画师/元数据类交给用户
     vocab_info: dict | None = None
+    fixed: list[str] = []
     if not args.no_vocab:
         vocab, why = load_active()
         if vocab is None:
@@ -529,7 +537,20 @@ def main() -> int:
             results = check_tags(vocab, [t for t in folded if t not in user_tags])
             vocab_info = {"vocab": why,
                           "flagged": [r for r in results if r["status"] != "ok" or r["user_decides"]]}
-            problems.extend(problems_from_check(results))
+            if args.fix:
+                replace: dict[str, str | None] = {}
+                for r in results:
+                    if r["status"] == "unknown" or r["user_decides"]:
+                        replace[r["tag"]] = None
+                        near = f"（近似：{', '.join(r['suggestions'])}）" if r.get("suggestions") else ""
+                        fixed.append(f"删 {r['tag']}：{'词表外' if r['status'] == 'unknown' else r['category'] + ' 类'}{near}")
+                    elif r["status"] == "alias":
+                        replace[r["tag"]] = r["canonical"]
+                        group_of.setdefault(r["canonical"], group_of.get(r["tag"], 0))
+                        fixed.append(f"{r['tag']} → {r['canonical']}")
+                folded = list(dict.fromkeys(replace.get(t, t) for t in folded if replace.get(t, t)))
+            else:
+                problems.extend(problems_from_check(results))
 
     # 4) 槽位冲突
     is_multi, multi_hits = detect_multi(folded)
@@ -542,7 +563,11 @@ def main() -> int:
     # 用户给的 tag 保留原拼写（LoRA 触发词里的下划线等）
     folded = [user_spelling.get(t, t) for t in folded]
     tag_text = SEP.join(folded)
-    text = f"{tag_text},\n\n{args.nl}" if (tag_text and args.nl) else (tag_text or args.nl)
+    groups: dict[int, list[str]] = {}
+    for t in folded:
+        groups.setdefault(group_of.get(normalize_tag(t), 0), []).append(t)
+    grouped = "\n\n".join(SEP.join(g) + "," for _, g in sorted(groups.items()))
+    text = f"{grouped}\n\n{args.nl}" if (grouped and args.nl) else (grouped or args.nl)
     n_tok, how = count_tokens(text)
     tag_tok, _ = count_tokens(tag_text)
     problems.extend(check_format(folded, args.nl, user_tags))
@@ -568,6 +593,7 @@ def main() -> int:
                    "tag_layer_only": tag_tok},
         "vocab": vocab_info,
         "audit": audit,
+        "fixed": fixed,
         "problems": problems,
     }
 
@@ -598,9 +624,9 @@ def main() -> int:
             if tag_tok is not None:
                 tok_line += f"　·　tag 层 {tag_tok}　→　NL 参考余额 {max(0, args.token_limit - tag_tok)}（分隔符也占预算）"
         print(tok_line)
-        print("\n[最终 tag] " + SEP.join(folded))
-        if args.nl:
-            print("\n[最终文本]\n" + text)
+        if fixed:
+            print("\n[已自动修正] " + "；".join(fixed))
+        print("\n[最终文本]\n" + text)
         if audit:
             print(f"\n[审计 LLM 输出] 提出 {audit['proposed_count']} 条")
             if audit["invented"]:

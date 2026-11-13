@@ -27,7 +27,8 @@ NL的词藻问题，在实际使用源项目的过程中，往往能够发现age
 | 输入 | 模式 | 指南 |
 |---|---|---|
 | 中文画面需求（单主体） | 创作 | [创作](references/创作.md) |
-| 图片 | 仔细反推 | [仔细反推](references/反推-仔细.md) |
+| 图片 | 快速反推（默认） | [快速反推](references/反推-快速.md) |
+| 图片 +「仔细 / 精确反推」 | 仔细反推 | [仔细反推](references/反推-仔细.md) |
 | 多个角色 / 角色触发词与外观 | 多角色 | [多角色](references/多角色.md) |
 | 「更新词表到 xx 模型」 | 词表维护 | [词表维护](references/词表维护.md) |
 
@@ -62,6 +63,7 @@ $PY = ".\.venv-pixai-gpu\Scripts\python.exe"   # Linux: ./.venv-pixai-gpu/bin/py
 | `& $PY tools\tag_vocab.py check "1girl, ..."` | 校验一串 tag 是否都在词表内 |
 | `& $PY tools\tag_vocab.py install <url> --model <名> --source-date <日期>` | 安装/更新词表 |
 | `& $PY tools\opencode_image.py --out .work` | 取出粘贴进 opencode 对话的图片（它们只存在 opencode 数据库里） |
+| `& $PY tools\quick_tag.py <图片>` | 快速反推：打标、规范化、查词表、按置信度分档、切局部图 |
 | `& $PY tools\pixai_tagger.py <图片...> --json` | 打标，输出每个 tag 的置信度 |
 | `& $PY tools\crop.py <图片> --box 0.3,0.5,0.7,1.0 --out .work\crop.png` | 裁切局部并放大，供看图核对细节 |
 | `& $PY tools\anima_validate.py --tags "..." --nl "..." --token-limit 512 --user-tags "..."` | 交付前校验：规范化、折叠、冲突、词表、质量词、token 计数 |

@@ -19,7 +19,8 @@ description: >
    | 用户给了什么 | 模式 | 读 |
    |---|---|---|
    | 画面需求，单个主体 | 创作 | `references/创作.md`、`references/通用规则.md`、`references/工具.md` |
-   | 图片（附件、本地路径、「照着这张反推」） | 仔细反推 | `references/反推-仔细.md`、`references/通用规则.md`、`references/工具.md` |
+   | 图片（附件、本地路径、「照着这张反推」） | 快速反推 | `references/反推-快速.md`，同一轮跑该文件第 1 步的 `quick_tag.py`（命令见下方「环境」） |
+   | 图片，且用户说「仔细 / 精确 / 详细反推」 | 仔细反推 | `references/反推-仔细.md`、`references/通用规则.md`、`references/工具.md` |
    | 两个及以上角色同框，或多个角色的触发词/外观 | 多角色 | `references/多角色.md`、`references/通用规则.md`、`references/工具.md` |
    | 「更新词表到 xx 模型」「换个词表」 | 词表维护 | `references/词表维护.md`、`references/工具.md` |
 
@@ -58,4 +59,5 @@ $PY    = "$SKILL\.venv-pixai-gpu\Scripts\python.exe"   # Linux: $SKILL/.venv-pix
 | 用途 | 命令 | 说明 |
 |---|---|---|
 | 环境体检 | `python "$SKILL\tools\setup.py" --check` | 用系统 Python 跑，因为 venv 可能还不存在。退出码非 0 时去掉 `--check` 再跑一次完成部署 |
+| 快速反推 | `& $PY "$SKILL\tools\quick_tag.py" "<图片>"`；粘贴的图用 `--pasted` 代替路径 | 取图、打标、规范化、查词表、切局部图一步完成 |
 | 交付前校验 | `& $PY "$SKILL\tools\anima_validate.py" --tags "<tag 串>" --nl "<NL，没有就省略>" --token-limit <token-limit> --user-tags "<用户给的全部内容>"` | 必须执行。负责规范化、去重、上位词折叠、槽位冲突、词表比对（词表外/别名/人物/作品/画师/元数据类）、质量词、NL 句号、T5 计数 |
